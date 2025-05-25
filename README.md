@@ -1,3 +1,3 @@
 # My GitHub Pages
 
-[MyApp](https://megakilo.github.io/myapp)
+[Screen Size Calculator](https://megakilo.github.io/screen_calculator)
