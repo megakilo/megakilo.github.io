@@ -49,9 +49,7 @@ function calculateScreenProperties() {
   const calculatedVerticalMovieArea = vertical_movie_area(diag, widthRatio, heightRatio);
   const calculatedMaxMovieArea = Math.max(calculatedMovieArea, calculatedVerticalMovieArea);
 
-  resultsDiv.innerHTML += `<p><strong>Diagonal:</strong> ${diag}</p>`;
-  resultsDiv.innerHTML += `<p><strong>Width:</strong> ${w.toFixed(2)}</p>`;
-  resultsDiv.innerHTML += `<p><strong>Height:</strong> ${h.toFixed(2)}</p>`;
+  resultsDiv.innerHTML += `<p><strong>Diagonal:</strong> ${diag}; <strong>Width:</strong> ${w.toFixed(2)}; <strong>Height:</strong> ${h.toFixed(2)}</p>`;
   resultsDiv.innerHTML += `<p><strong>Area:</strong> ${calculatedArea.toFixed(2)}</p>`;
   resultsDiv.innerHTML += `<p><strong>Movie Area (16:9 crop):</strong> ${calculatedMovieArea.toFixed(2)}</p>`;
   resultsDiv.innerHTML += `<p><strong>Max Movie Area (fit 16:9):</strong> ${calculatedMaxMovieArea.toFixed(2)}</p>`;
