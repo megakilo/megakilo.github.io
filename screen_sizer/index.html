@@ -16,9 +16,12 @@
         .results table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .results th, .results td { text-align: left; padding: 1px; border: 1px solid #ddd; }
         .results th { background-color: #e9ecef; color: #495057; font-weight: bold; }
-        .results td:first-child { font-weight: bold; color: #333; width: 40%;}
+        .results td:first-child { font-weight: bold; color: #333; width: 40%; }
         .results .screen-size-details { font-size: 0.9em; color: #555; }
         .error-message { color: red; font-weight: bold; text-align: center; margin-top: 10px;}
+        .input-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .input-group { flex: 1; }
+        .input-group input[type="number"] { width: 100%; margin-bottom: 0; }
     </style>
 </head>
 <body>
@@ -30,20 +33,31 @@
             <input type="number" id="diag" name="diag" value="27" step="any">
         </div>
 
-        <div>
-            <label for="widthRatio">Width Ratio (W):</label>
-            <input type="number" id="widthRatio" name="widthRatio" value="1920" step="any">
+        <div class="input-row">
+            <div class="input-group">
+                <label for="widthRatio">Width Ratio:</label>
+                <input type="number" id="widthRatio" name="widthRatio" value="1920" step="any">
+            </div>
+            <div class="input-group">
+                <label for="heightRatio">Height Ratio:</label>
+                <input type="number" id="heightRatio" name="heightRatio" value="1080" step="any">
+            </div>
         </div>
-
-        <div>
-            <label for="heightRatio">Height Ratio (H):</label>
-            <input type="number" id="heightRatio" name="heightRatio" value="1080" step="any">
+        <div class="input-row">
+            <div class="input-group">
+                <label for="videoWidthRatio">Video Width Ratio:</label>
+                <input type="number" id="videoWidthRatio" name="videoWidthRatio" value="1920" step="any">
+            </div>
+            <div class="input-group">
+                <label for="videoHeightRatio">Video Height Ratio:</label>
+                <input type="number" id="videoHeightRatio" name="videoHeightRatio" value="1080" step="any">
+            </div>
         </div>
 
         <button onclick="calculateScreenProperties()">Calculate</button>
 
         <div class="results" id="results">
-            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
