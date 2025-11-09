@@ -48,3 +48,41 @@ function calculateScreenProperties() {
   resultsDiv.innerHTML += `<p><strong>Screen Area:</strong> ${area.toFixed(2)}; <strong>Diagonal:</strong> ${diag.toFixed(2)}</p>`;
   resultsDiv.innerHTML += `<p><strong>Video Area:</strong> ${videoArea.toFixed(2)}; <strong>Video Diagonal:</strong> ${videoDiag.toFixed(2)}</p>`;
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('presetRatios').addEventListener('change', function() {
+        const selectedRatio = this.value;
+        if (selectedRatio) {
+            const [width, height] = selectedRatio.split(':');
+            document.getElementById('widthRatio').value = width;
+            document.getElementById('heightRatio').value = height;
+        }
+    });
+
+    document.getElementById('presetVideoRatios').addEventListener('change', function() {
+        const selectedRatio = this.value;
+        if (selectedRatio) {
+            const [width, height] = selectedRatio.split(':');
+            document.getElementById('videoWidthRatio').value = width;
+            document.getElementById('videoHeightRatio').value = height;
+        }
+    });
+
+    document.getElementById('swapRatios').addEventListener('click', function() {
+        const widthRatioInput = document.getElementById('widthRatio');
+        const heightRatioInput = document.getElementById('heightRatio');
+
+        const temp = widthRatioInput.value;
+        widthRatioInput.value = heightRatioInput.value;
+        heightRatioInput.value = temp;
+    });
+
+    document.getElementById('swapVideoRatios').addEventListener('click', function() {
+        const videoWidthRatioInput = document.getElementById('videoWidthRatio');
+        const videoHeightRatioInput = document.getElementById('videoHeightRatio');
+
+        const temp = videoWidthRatioInput.value;
+        videoWidthRatioInput.value = videoHeightRatioInput.value;
+        videoHeightRatioInput.value = temp;
+    });
+});

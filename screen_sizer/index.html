@@ -9,8 +9,20 @@
         .container { max-width: 500px; margin: auto; padding: 10px; background-color: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         h1 { color: #0056b3; text-align: center; margin-bottom: 15px; margin-top: 10px;}
         label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        button { display: block; width: 100%; padding: 12px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 15px; transition: background-color 0.3s ease; }
-        button:hover { background-color: #0056b3; }
+        button.primary { display: block; width: 100%; padding: 12px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 15px; transition: background-color 0.3s ease; margin-top: 15px; }
+        button.primary:hover { background-color: #0056b3; }
+        .input-group button {
+            padding: 8px 12px;
+            font-size: 14px;
+            background-color: #e0e0e0;
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: bold;
+        }
+        .input-group button:hover { background-color: #007bff; color: #fff; }
         .results { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
         .results table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .results th, .results td { text-align: left; padding: 1px; border: 1px solid #ddd; }
@@ -18,10 +30,13 @@
         .results td:first-child { font-weight: bold; color: #333; width: 40%; }
         .results .screen-size-details { font-size: 0.9em; color: #555; }
         .error-message { color: red; font-weight: bold; text-align: center; margin-top: 10px;}
-        .input-group { display: flex; align-items: center; margin-bottom: 15px; gap: 10px; }
-        .input-group label { flex: 0 0 40%; margin-bottom: 0; }
+        .input-group { display: flex; align-items: center; margin-bottom: 15px; gap: 5px; }
+        .input-group label { margin-bottom: 0; }
+        .input-group .first-label { width: 150px; }
+        .input-group .ratio-label-x { margin-left: 10px; margin-right: 10px; display: inline-flex; align-items: center; }
         .input-group input[type="number"] { flex: 1; margin-bottom: 0; }
         input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        select { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background-color: #fff; -webkit-appearance: none; appearance: none; }
     </style>
 </head>
 <body>
@@ -29,31 +44,52 @@
         <h1>Screen Sizer 📐</h1>
 
         <div class="input-group">
-            <label for="diag">Screen Diagonal:</label>
+            <label for="diag" class="first-label">Screen Diagonal:</label>
             <input type="number" id="diag" name="diag" value="27" step="any">
         </div>
 
         <div class="input-group">
-            <label for="widthRatio">Width Ratio:</label>
+            <label for="presetRatios" class="first-label">Preset Screen Ratios:</label>
+            <select id="presetRatios" name="presetRatios">
+                <option value="" disabled selected>Select a ratio</option>
+                <option value="16:9">16:9</option>
+                <option value="16:10">16:10</option>
+                <option value="4:3">4:3</option>
+                <option value="3:2">3:2</option>
+                <option value="21:9">21:9</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label class="first-label">Screen Ratio: </label>
             <input type="number" id="widthRatio" name="widthRatio" value="1920" step="any">
-        </div>
-
-        <div class="input-group">
-            <label for="heightRatio">Height Ratio:</label>
+            <label class="ratio-label-x">x</label>
             <input type="number" id="heightRatio" name="heightRatio" value="1080" step="any">
+            <button id="swapRatios">Swap</button>
         </div>
 
         <div class="input-group">
-            <label for="videoWidthRatio">Video Width Ratio:</label>
+            <label for="presetVideoRatios" class="first-label">Preset Video Ratios:</label>
+            <select id="presetVideoRatios" name="presetVideoRatios">
+                <option value="" disabled selected>Select a ratio</option>
+                <option value="16:9">16:9</option>
+                <option value="16:10">16:10</option>
+                <option value="4:3">4:3</option>
+                <option value="3:2">3:2</option>
+                <option value="185:100">1.85:1</option>
+                <option value="239:100">2.39:1</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label class="first-label">Video Ratio: </label>
             <input type="number" id="videoWidthRatio" name="videoWidthRatio" value="1920" step="any">
-        </div>
-
-        <div class="input-group">
-            <label for="videoHeightRatio">Video Height Ratio:</label>
+            <label class="ratio-label-x">x</label>
             <input type="number" id="videoHeightRatio" name="videoHeightRatio" value="1080" step="any">
+            <button id="swapVideoRatios">Swap</button>
         </div>
 
-        <button onclick="calculateScreenProperties()">Calculate</button>
+        <button onclick="calculateScreenProperties()" class="primary">Calculate</button>
 
         <div class="results" id="results">
         </div>
