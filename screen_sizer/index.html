@@ -1,16 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
     <title>Screen Sizer</title>
     <style>
-        body { font-family: sans-serif; margin: 20px; background-color: #f4f7f6; color: #333; }
-        .container { max-width: 500px; margin: auto; padding: 10px; background-color: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { color: #0056b3; text-align: center; margin-bottom: 15px; margin-top: 10px;}
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        button.primary { display: block; width: 100%; padding: 12px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 15px; transition: background-color 0.3s ease; margin-top: 15px; }
-        button.primary:hover { background-color: #0056b3; }
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: auto;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #0056b3;
+            text-align: center;
+            margin-bottom: 15px;
+            margin-top: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        button.primary {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: background-color 0.3s ease;
+            margin-top: 15px;
+        }
+
+        button.primary:hover {
+            background-color: #0056b3;
+        }
+
         .input-group button {
             padding: 8px 12px;
             font-size: 14px;
@@ -22,40 +66,209 @@
             transition: background-color 0.3s ease;
             font-weight: bold;
         }
-        .input-group button:hover { background-color: #007bff; color: #fff; }
-        .results { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
-        .results table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .results th, .results td { text-align: left; padding: 1px; border: 1px solid #ddd; }
-        .results th { background-color: #e9ecef; color: #495057; font-weight: bold; }
-        .results td:first-child { font-weight: bold; color: #333; width: 40%; }
-        .results .screen-size-details { font-size: 0.9em; color: #555; }
-        .error-message { color: red; font-weight: bold; text-align: center; margin-top: 10px;}
-        .input-group { display: flex; align-items: center; margin-bottom: 15px; gap: 5px; }
-        .input-group label { margin-bottom: 0; }
-        .input-group .first-label { width: 100px; }
-        .input-group .ratio-label-x { margin-left: 10px; margin-right: 10px; display: inline-flex; align-items: center; }
-        .input-group input[type="number"] { flex: 1; margin-bottom: 0; }
-        input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        select { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background-color: #fff; -webkit-appearance: none; appearance: none; }
+
+        .input-group button:hover {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .results {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+
+        .results table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .results th,
+        .results td {
+            text-align: left;
+            padding: 1px;
+            border: 1px solid #ddd;
+        }
+
+        .results th {
+            background-color: #e9ecef;
+            color: #495057;
+            font-weight: bold;
+        }
+
+        .results td:first-child {
+            font-weight: bold;
+            color: #333;
+            width: 40%;
+        }
+
+        .results .screen-size-details {
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .result-section {
+            margin-bottom: 5px;
+            padding-bottom: 0;
+        }
+
+        .result-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .result-section h3 {
+            margin-top: 0;
+            margin-bottom: 3px;
+            padding: 0;
+            font-size: 1.1em;
+            color: #0056b3;
+        }
+
+        .result-section p {
+            margin: 1px 0;
+        }
+
+        .error-message {
+            color: red;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 5px;
+        }
+
+        .input-group label {
+            margin-bottom: 0;
+        }
+
+        .input-group .first-label {
+            width: 100px;
+        }
+
+        .input-group .ratio-label-x {
+            margin-left: 10px;
+            margin-right: 10px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .input-group input[type="number"] {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        select {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: #fff;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
         @media (prefers-color-scheme: dark) {
-            body { background-color: #2c2c2c; color: #e0e0e0; }
-            .container { background-color: #3a3a3a; border: 1px solid #555; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
-            h1 { color: #8ab4f8; } /* A soft blue for headings */
-            label { color: #c0c0c0; }
-            button.primary { background-color: #6200ee; } /* A deep purple for primary buttons */
-            button.primary:hover { background-color: #3700b3; }
-            .input-group button { background-color: #555; color: #e0e0e0; }
-            .input-group button:hover { background-color: #8ab4f8; color: #2c2c2c; }
-            .results th, .results td { border: 1px solid #555; }
-            .results th { background-color: #4a4a4a; color: #e0e0e0; }
-            .results td:first-child { color: #e0e0e0; }
-            .results .screen-size-details { color: #c0c0c0; }
-            input[type="number"], select { background-color: #4a4a4a; border: 1px solid #555; color: #e0e0e0; }
-            input[type="number"]::placeholder, select::placeholder { color: #a0a0a0; }
-            select { -webkit-appearance: none; appearance: none; } /* Reset appearance for consistent styling */
+            body {
+                background-color: #2c2c2c;
+                color: #e0e0e0;
+            }
+
+            .container {
+                background-color: #3a3a3a;
+                border: 1px solid #555;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            }
+
+            h1 {
+                color: #8ab4f8;
+            }
+
+            /* A soft blue for headings */
+            label {
+                color: #c0c0c0;
+            }
+
+            button.primary {
+                background-color: #6200ee;
+            }
+
+            /* A deep purple for primary buttons */
+            button.primary:hover {
+                background-color: #3700b3;
+            }
+
+            .input-group button {
+                background-color: #555;
+                color: #e0e0e0;
+            }
+
+            .input-group button:hover {
+                background-color: #8ab4f8;
+                color: #2c2c2c;
+            }
+
+            .results th,
+            .results td {
+                border: 1px solid #555;
+            }
+
+            .results th {
+                background-color: #4a4a4a;
+                color: #e0e0e0;
+            }
+
+            .results td:first-child {
+                color: #e0e0e0;
+            }
+
+            .results .screen-size-details {
+                color: #c0c0c0;
+            }
+
+            input[type="number"],
+            select {
+                background-color: #4a4a4a;
+                border: 1px solid #555;
+                color: #e0e0e0;
+            }
+
+            input[type="number"]::placeholder,
+            select::placeholder {
+                color: #a0a0a0;
+            }
+
+            select {
+                -webkit-appearance: none;
+                appearance: none;
+            }
+
+            /* Reset appearance for consistent styling */
+
+            .result-section h3 {
+                color: #8ab4f8;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>Screen Sizer 📐</h1>
@@ -110,8 +323,20 @@
 
         <div class="results" id="results">
         </div>
+
+        <div id="history-container"
+            style="margin-top: 20px; border-top: 2px solid #eee; padding-top: 10px; display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h2 style="margin: 0; font-size: 1.2em;">History</h2>
+                <button id="clearHistory"
+                    style="padding: 5px 10px; font-size: 0.8em; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Clear
+                    History</button>
+            </div>
+            <div id="history-list"></div>
+        </div>
     </div>
 
     <script src="script.js"></script>
 </body>
+
 </html>

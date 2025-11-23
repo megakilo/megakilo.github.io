@@ -43,46 +43,103 @@ function calculateScreenProperties() {
   const [w, h] = normalize(diag, widthRatio, heightRatio);
   const area = w * h;
   const [videoArea, videoDiag] = videoDimensions(w, h, videoWidthRatio, videoHeightRatio);
+  const [videoWidth, videoHeight] = normalize(videoDiag, videoWidthRatio, videoHeightRatio);
 
-  resultsDiv.innerHTML += `<p><strong>Width:</strong> ${w.toFixed(2)}; <strong>Height:</strong> ${h.toFixed(2)}</p>`;
-  resultsDiv.innerHTML += `<p><strong>Screen Area:</strong> ${area.toFixed(2)}; <strong>Diagonal:</strong> ${diag.toFixed(2)}</p>`;
-  resultsDiv.innerHTML += `<p><strong>Video Area:</strong> ${videoArea.toFixed(2)}; <strong>Video Diagonal:</strong> ${videoDiag.toFixed(2)}</p>`;
+  resultsDiv.innerHTML += `<div class="result-section">`;
+  resultsDiv.innerHTML += `<h3>Screen Dimensions</h3>`;
+  resultsDiv.innerHTML += `<p><strong>Width:</strong> ${w.toFixed(2)}" &nbsp; <strong>Height:</strong> ${h.toFixed(2)}"</p>`;
+  resultsDiv.innerHTML += `<p><strong>Area:</strong> ${area.toFixed(2)} sq in &nbsp; <strong>Diagonal:</strong> ${diag.toFixed(2)}"</p>`;
+  resultsDiv.innerHTML += `</div>`;
+
+  resultsDiv.innerHTML += `<div class="result-section">`;
+  resultsDiv.innerHTML += `<h3>Video Dimensions</h3>`;
+  resultsDiv.innerHTML += `<p><strong>Width:</strong> ${videoWidth.toFixed(2)}" &nbsp; <strong>Height:</strong> ${videoHeight.toFixed(2)}"</p>`;
+  resultsDiv.innerHTML += `<p><strong>Area:</strong> ${videoArea.toFixed(2)} sq in &nbsp; <strong>Diagonal:</strong> ${videoDiag.toFixed(2)}"</p>`;
+  resultsDiv.innerHTML += `</div>`;
+
+  if (window.addToHistory) {
+    window.addToHistory({
+      diag, widthRatio, heightRatio, w, h, area, videoArea, videoDiag, videoWidth, videoHeight
+    });
+  }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('presetRatios').addEventListener('change', function() {
-        const selectedRatio = this.value;
-        if (selectedRatio) {
-            const [width, height] = selectedRatio.split(':');
-            document.getElementById('widthRatio').value = width;
-            document.getElementById('heightRatio').value = height;
-        }
+document.addEventListener('DOMContentLoaded', function () {
+  document.getElementById('presetRatios').addEventListener('change', function () {
+    const selectedRatio = this.value;
+    if (selectedRatio) {
+      const [width, height] = selectedRatio.split(':');
+      document.getElementById('widthRatio').value = width;
+      document.getElementById('heightRatio').value = height;
+    }
+  });
+
+  document.getElementById('presetVideoRatios').addEventListener('change', function () {
+    const selectedRatio = this.value;
+    if (selectedRatio) {
+      const [width, height] = selectedRatio.split(':');
+      document.getElementById('videoWidthRatio').value = width;
+      document.getElementById('videoHeightRatio').value = height;
+    }
+  });
+
+  document.getElementById('swapRatios').addEventListener('click', function () {
+    const widthRatioInput = document.getElementById('widthRatio');
+    const heightRatioInput = document.getElementById('heightRatio');
+
+    const temp = widthRatioInput.value;
+    widthRatioInput.value = heightRatioInput.value;
+    heightRatioInput.value = temp;
+  });
+
+  document.getElementById('swapVideoRatios').addEventListener('click', function () {
+    const videoWidthRatioInput = document.getElementById('videoWidthRatio');
+    const videoHeightRatioInput = document.getElementById('videoHeightRatio');
+
+    const temp = videoWidthRatioInput.value;
+    videoWidthRatioInput.value = videoHeightRatioInput.value;
+    videoHeightRatioInput.value = temp;
+  });
+
+  // History Feature
+  let history = [];
+  const historyContainer = document.getElementById('history-container');
+  const historyList = document.getElementById('history-list');
+  const clearHistoryBtn = document.getElementById('clearHistory');
+
+  function renderHistory() {
+    if (history.length === 0) {
+      historyContainer.style.display = 'none';
+      return;
+    }
+    historyContainer.style.display = 'block';
+    historyList.innerHTML = '';
+    history.forEach((item, index) => {
+      const historyItem = document.createElement('div');
+      historyItem.style.borderBottom = '1px solid #eee';
+      historyItem.style.padding = '10px 0';
+      historyItem.style.fontSize = '0.9em';
+      historyItem.innerHTML = `
+                <div><strong>Run #${history.length - index}</strong> <span style="color: #888; font-size: 0.8em;">(${item.timestamp})</span></div>
+                <div>Diag: ${item.diag}" | Ratio: ${item.widthRatio}:${item.heightRatio}</div>
+                <div>Result: ${item.w.toFixed(2)}" x ${item.h.toFixed(2)}" (Area: ${item.area.toFixed(2)} sq in)</div>
+                <div>Video: ${item.videoWidth.toFixed(2)}" x ${item.videoHeight.toFixed(2)}" (Area: ${item.videoArea.toFixed(2)} sq in; Diag: ${item.videoDiag.toFixed(2)}")</div>
+            `;
+      historyList.appendChild(historyItem);
     });
+  }
 
-    document.getElementById('presetVideoRatios').addEventListener('change', function() {
-        const selectedRatio = this.value;
-        if (selectedRatio) {
-            const [width, height] = selectedRatio.split(':');
-            document.getElementById('videoWidthRatio').value = width;
-            document.getElementById('videoHeightRatio').value = height;
-        }
-    });
+  clearHistoryBtn.addEventListener('click', function () {
+    history = [];
+    renderHistory();
+  });
 
-    document.getElementById('swapRatios').addEventListener('click', function() {
-        const widthRatioInput = document.getElementById('widthRatio');
-        const heightRatioInput = document.getElementById('heightRatio');
-
-        const temp = widthRatioInput.value;
-        widthRatioInput.value = heightRatioInput.value;
-        heightRatioInput.value = temp;
-    });
-
-    document.getElementById('swapVideoRatios').addEventListener('click', function() {
-        const videoWidthRatioInput = document.getElementById('videoWidthRatio');
-        const videoHeightRatioInput = document.getElementById('videoHeightRatio');
-
-        const temp = videoWidthRatioInput.value;
-        videoWidthRatioInput.value = videoHeightRatioInput.value;
-        videoHeightRatioInput.value = temp;
-    });
+  // Expose addToHistory to be called from calculateScreenProperties
+  window.addToHistory = function (result) {
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString();
+    history.unshift({ ...result, timestamp });
+    if (history.length > 10) history.pop(); // Keep last 10
+    renderHistory();
+  };
 });
