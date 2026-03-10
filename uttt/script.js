@@ -9,41 +9,44 @@
 const EMPTY = 0, X = 1, O = 2;
 
 const LINES = [
-  [[0,0],[0,1],[0,2]], [[1,0],[1,1],[1,2]], [[2,0],[2,1],[2,2]], // rows
-  [[0,0],[1,0],[2,0]], [[0,1],[1,1],[2,1]], [[0,2],[1,2],[2,2]], // cols
-  [[0,0],[1,1],[2,2]], [[0,2],[1,1],[2,0]],                      // diags
+  [[0, 0], [0, 1], [0, 2]], [[1, 0], [1, 1], [1, 2]], [[2, 0], [2, 1], [2, 2]], // rows
+  [[0, 0], [1, 0], [2, 0]], [[0, 1], [1, 1], [2, 1]], [[0, 2], [1, 2], [2, 2]], // cols
+  [[0, 0], [1, 1], [2, 2]], [[0, 2], [1, 1], [2, 0]],                      // diags
 ];
 
 /* ── Colours (matching Pygame palette) ─────────────────────────────────── */
 const COL = {
-  bg:          "#181820",
-  cellBg:      "#26263a",   // slightly lighter for cells vs board bg
-  boardBg:     "#20202a",
-  grid:        "#3c3c4b",
-  metaGrid:    "#8c8ca0",
-  xColor:      "#50a0ff",
-  oColor:      "#ff5a78",
-  xDim:        "#285082",
-  oDim:        "#822d3c",
-  activeOvr:   "rgba(255,220,80,0.16)",
-  wonXOvr:     "rgba(80,160,255,0.22)",
-  wonOOvr:     "rgba(255,90,120,0.22)",
-  drawOvr:     "rgba(100,100,100,0.20)",
-  hoverOvr:    "rgba(255,255,255,0.10)",
+  bg: "#181820",
+  cellBg: "#26263a",   // slightly lighter for cells vs board bg
+  boardBg: "#20202a",
+  grid: "#3c3c4b",
+  metaGrid: "#8c8ca0",
+  xColor: "#50a0ff",
+  oColor: "#ff5a78",
+  xDim: "#285082",
+  oDim: "#822d3c",
+  activeOvr: "rgba(255,220,80,0.16)",
+  wonXOvr: "rgba(80,160,255,0.22)",
+  wonOOvr: "rgba(255,90,120,0.22)",
+  drawOvr: "rgba(100,100,100,0.20)",
+  hoverOvr: "rgba(255,255,255,0.10)",
 };
 
 /* ── Layout ────────────────────────────────────────────────────────────── */
 const BOARD_SIZE = 630;
-const PADDING    = 35;
-const META_GAP   = 6;
-const CELL_GAP   = 2;
-const CANVAS_W   = BOARD_SIZE + PADDING * 2;
-const CANVAS_H   = BOARD_SIZE + PADDING * 2;
+const PADDING = 35;
+const META_GAP = 6;
+const CELL_GAP = 2;
+const CANVAS_W = BOARD_SIZE + PADDING * 2;
+const CANVAS_H = BOARD_SIZE + PADDING * 2;
 
 const SMALL_BOARD_SIZE = (BOARD_SIZE - META_GAP * 2) / 3;
-const CELL_SIZE        = (SMALL_BOARD_SIZE - CELL_GAP * 2) / 3;
+const CELL_SIZE = (SMALL_BOARD_SIZE - CELL_GAP * 2) / 3;
 
 const AI_DELAY_MS = 350;
+
+/* ── AI difficulty ──────────────────────────────────────────────────────── */
+let aiDifficulty = "normal";   // "normal" | "hard"
 
 /* ==========================================================================
    Section 1 — Game Logic  (port of game.py)
@@ -61,11 +64,11 @@ function checkWinner(grid) {
 
 class SmallBoard {
   constructor() {
-    this.cells = [[0,0,0],[0,0,0],[0,0,0]];
+    this.cells = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
     this.winner = EMPTY;
     this.moveCount = 0;
   }
-  isFull()     { return this.moveCount >= 9; }
+  isFull() { return this.moveCount >= 9; }
   isPlayable() { return this.winner === EMPTY && !this.isFull(); }
   place(r, c, player) {
     this.cells[r][c] = player;
@@ -119,7 +122,7 @@ class UltimateBoard {
       if (board.isPlayable()) {
         for (let cr = 0; cr < 3; cr++)
           for (let cc = 0; cc < 3; cc++)
-            if (board.cells[cr][cc] === EMPTY) moves.push([br,bc,cr,cc]);
+            if (board.cells[cr][cc] === EMPTY) moves.push([br, bc, cr, cc]);
         return moves;
       }
     }
@@ -131,7 +134,7 @@ class UltimateBoard {
         if (board.isPlayable())
           for (let cr = 0; cr < 3; cr++)
             for (let cc = 0; cc < 3; cc++)
-              if (board.cells[cr][cc] === EMPTY) moves.push([br,bc,cr,cc]);
+              if (board.cells[cr][cc] === EMPTY) moves.push([br, bc, cr, cc]);
       }
     return moves;
   }
@@ -182,10 +185,10 @@ function countInLine(board, player) {
   const opponent = player === X ? O : X;
   const result = [];
   for (const line of LINES) {
-    const vals = line.map(([r,c]) => board.cells[r][c]);
+    const vals = line.map(([r, c]) => board.cells[r][c]);
     if (vals.includes(opponent)) continue;
     const count = vals.filter(v => v === player).length;
-    const empties = line.filter(([r,c]) => board.cells[r][c] === EMPTY);
+    const empties = line.filter(([r, c]) => board.cells[r][c] === EMPTY);
     result.push({ count, empties });
   }
   return result;
@@ -262,21 +265,166 @@ function chooseMove(ub, aiPlayer = O) {
   return bestMove;
 }
 
+/* ── MCTS AI (Hard) ────────────────────────────────────────────────────── */
+
+class MCTSNode {
+  constructor(state, parent = null, move = null) {
+    this.state = state;
+    this.parent = parent;
+    this.move = move;
+    this.children = [];
+    this.wins = 0;
+    this.visits = 0;
+    this.untriedMoves = state.getValidMoves();
+  }
+
+  isFullyExpanded() { return this.untriedMoves.length === 0; }
+  isTerminal() { return this.state.gameOver; }
+
+  ucb1(explorationC = 1.41) {
+    if (this.visits === 0) return Infinity;
+    return (this.wins / this.visits) +
+      explorationC * Math.sqrt(Math.log(this.parent.visits) / this.visits);
+  }
+
+  bestChild() {
+    let best = null, bestVal = -Infinity;
+    for (const c of this.children) {
+      const val = c.ucb1();
+      if (val > bestVal) { bestVal = val; best = c; }
+    }
+    return best;
+  }
+
+  expand() {
+    const idx = Math.floor(Math.random() * this.untriedMoves.length);
+    const move = this.untriedMoves.splice(idx, 1)[0];
+    const next = this.state.copy();
+    next.makeMove(move[0], move[1], move[2], move[3]);
+    const child = new MCTSNode(next, this, move);
+    this.children.push(child);
+    return child;
+  }
+}
+
+function mctsSimulate(state) {
+  const sim = state.copy();
+  while (!sim.gameOver) {
+    const moves = sim.getValidMoves();
+    let m = null;
+
+    // Heuristic-guided rollout: prioritise wins & blocks
+    const player = sim.currentPlayer;
+    const opponent = player === X ? O : X;
+
+    // Group moves by sub-board for efficient win/block detection
+    const byBoard = new Map();
+    for (const mv of moves) {
+      const key = mv[0] * 3 + mv[1];
+      if (!byBoard.has(key)) byBoard.set(key, []);
+      byBoard.get(key).push(mv);
+    }
+
+    // 1. Take an immediate small-board win
+    for (const [key, bMoves] of byBoard) {
+      const br = bMoves[0][0], bc = bMoves[0][1];
+      const board = sim.boards[br][bc];
+      const wc = immediateWinCell(board, player);
+      if (wc) {
+        const found = bMoves.find(mv => mv[2] === wc[0] && mv[3] === wc[1]);
+        if (found) { m = found; break; }
+      }
+    }
+
+    // 2. Block an opponent's immediate small-board win
+    if (!m) {
+      for (const [key, bMoves] of byBoard) {
+        const br = bMoves[0][0], bc = bMoves[0][1];
+        const board = sim.boards[br][bc];
+        const bc2 = immediateWinCell(board, opponent);
+        if (bc2) {
+          const found = bMoves.find(mv => mv[2] === bc2[0] && mv[3] === bc2[1]);
+          if (found) { m = found; break; }
+        }
+      }
+    }
+
+    // 3. Otherwise pick randomly
+    if (!m) m = moves[Math.floor(Math.random() * moves.length)];
+
+    sim.makeMove(m[0], m[1], m[2], m[3]);
+  }
+  return sim.metaWinner;
+}
+
+function mctsChooseMove(ub, aiPlayer, iterations = 800) {
+  const root = new MCTSNode(ub.copy());
+  const opponent = aiPlayer === X ? O : X;
+
+  for (let i = 0; i < iterations; i++) {
+    // 1. Select
+    let node = root;
+    while (!node.isTerminal() && node.isFullyExpanded()) {
+      node = node.bestChild();
+    }
+
+    // 2. Expand
+    if (!node.isTerminal() && !node.isFullyExpanded()) {
+      node = node.expand();
+    }
+
+    // 3. Simulate
+    const winner = mctsSimulate(node.state);
+
+    // 4. Backpropagate
+    let reward;
+    if (winner === aiPlayer) reward = 1;
+    else if (winner === opponent) reward = 0;
+    else reward = 0.3;   // draw
+
+    while (node !== null) {
+      node.visits++;
+      // Flip reward perspective at each level
+      const nodePlayer = node.state.currentPlayer;
+      node.wins += (nodePlayer !== aiPlayer) ? reward : (1 - reward);
+      node = node.parent;
+    }
+  }
+
+  // Pick the most-visited child
+  let best = null, bestVisits = -1;
+  for (const c of root.children) {
+    if (c.visits > bestVisits) { bestVisits = c.visits; best = c; }
+  }
+  return best.move;
+}
+
+/* ── AI Dispatcher ─────────────────────────────────────────────────────── */
+
+function getAIMove(ub) {
+  switch (aiDifficulty) {
+    case "hard": return mctsChooseMove(ub, O, 2000);
+    case "normal":
+    default: return chooseMove(ub, O);
+  }
+}
+
 /* ==========================================================================
    Section 3 — Canvas Renderer + UI Glue
    ========================================================================== */
 
-const canvas  = document.getElementById("board-canvas");
-const ctx     = canvas.getContext("2d");
+const canvas = document.getElementById("board-canvas");
+const ctx = canvas.getContext("2d");
 const statusEl = document.getElementById("status");
-const btnEl    = document.getElementById("new-game-btn");
+const btnEl = document.getElementById("new-game-btn");
+const pickerEl = document.getElementById("difficulty-picker");
 
 // Handle high-DPI displays
 function setupCanvas() {
   const dpr = window.devicePixelRatio || 1;
-  canvas.width  = CANVAS_W * dpr;
+  canvas.width = CANVAS_W * dpr;
   canvas.height = CANVAS_H * dpr;
-  canvas.style.width  = CANVAS_W + "px";
+  canvas.style.width = CANVAS_W + "px";
   canvas.style.height = CANVAS_H + "px";
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
@@ -284,7 +432,7 @@ setupCanvas();
 
 /* ── Precompute rects ──────────────────────────────────────────────────── */
 const boardRects = {};  // key "br,bc" → {x, y, w, h}
-const cellRects  = {};  // key "br,bc,cr,cc" → {x, y, w, h}
+const cellRects = {};  // key "br,bc,cr,cc" → {x, y, w, h}
 
 for (let br = 0; br < 3; br++) {
   for (let bc = 0; bc < 3; bc++) {
@@ -317,10 +465,10 @@ function cellAt(px, py) {
 function roundRect(x, y, w, h, radius) {
   ctx.beginPath();
   ctx.moveTo(x + radius, y);
-  ctx.arcTo(x + w, y,     x + w, y + h, radius);
-  ctx.arcTo(x + w, y + h, x,     y + h, radius);
-  ctx.arcTo(x,     y + h, x,     y,     radius);
-  ctx.arcTo(x,     y,     x + w, y,     radius);
+  ctx.arcTo(x + w, y, x + w, y + h, radius);
+  ctx.arcTo(x + w, y + h, x, y + h, radius);
+  ctx.arcTo(x, y + h, x, y, radius);
+  ctx.arcTo(x, y, x + w, y, radius);
   ctx.closePath();
 }
 
@@ -522,7 +670,7 @@ function getCanvasPos(e) {
   const scaleY = CANVAS_H / rect.height;
   return [
     (e.clientX - rect.left) * scaleX,
-    (e.clientY - rect.top)  * scaleY,
+    (e.clientY - rect.top) * scaleY,
   ];
 }
 
@@ -545,7 +693,7 @@ canvas.addEventListener("click", (e) => {
   if (!cell) return;
 
   const validMoves = game.getValidMoves();
-  const isValid = validMoves.some(m => m[0]===cell[0] && m[1]===cell[1] && m[2]===cell[2] && m[3]===cell[3]);
+  const isValid = validMoves.some(m => m[0] === cell[0] && m[1] === cell[1] && m[2] === cell[2] && m[3] === cell[3]);
   if (!isValid) return;
 
   game.makeMove(cell[0], cell[1], cell[2], cell[3]);
@@ -555,7 +703,7 @@ canvas.addEventListener("click", (e) => {
   if (!game.gameOver && game.currentPlayer === O) {
     aiPending = true;
     setTimeout(() => {
-      const move = chooseMove(game, O);
+      const move = getAIMove(game);
       game.makeMove(move[0], move[1], move[2], move[3]);
       aiPending = false;
       render();
@@ -573,13 +721,13 @@ canvas.addEventListener("touchend", (e) => {
   const scaleX = CANVAS_W / rect.width;
   const scaleY = CANVAS_H / rect.height;
   const px = (touch.clientX - rect.left) * scaleX;
-  const py = (touch.clientY - rect.top)  * scaleY;
+  const py = (touch.clientY - rect.top) * scaleY;
 
   const cell = cellAt(px, py);
   if (!cell) return;
 
   const validMoves = game.getValidMoves();
-  const isValid = validMoves.some(m => m[0]===cell[0] && m[1]===cell[1] && m[2]===cell[2] && m[3]===cell[3]);
+  const isValid = validMoves.some(m => m[0] === cell[0] && m[1] === cell[1] && m[2] === cell[2] && m[3] === cell[3]);
   if (!isValid) return;
 
   game.makeMove(cell[0], cell[1], cell[2], cell[3]);
@@ -588,7 +736,7 @@ canvas.addEventListener("touchend", (e) => {
   if (!game.gameOver && game.currentPlayer === O) {
     aiPending = true;
     setTimeout(() => {
-      const move = chooseMove(game, O);
+      const move = getAIMove(game);
       game.makeMove(move[0], move[1], move[2], move[3]);
       aiPending = false;
       render();
@@ -596,8 +744,17 @@ canvas.addEventListener("touchend", (e) => {
   }
 });
 
-// New Game button
+// New Game button → show difficulty picker
 btnEl.addEventListener("click", () => {
+  pickerEl.classList.remove("hidden");
+});
+
+// Difficulty picker buttons
+pickerEl.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-difficulty]");
+  if (!btn) return;
+  aiDifficulty = btn.dataset.difficulty;
+  pickerEl.classList.add("hidden");
   game = new UltimateBoard();
   aiPending = false;
   render();

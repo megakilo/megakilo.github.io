@@ -1,5 +1,7 @@
 /* ── Reset & Base ──────────────────────────────────────────────────── */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -61,11 +63,27 @@ h1 {
   transition: color 0.3s ease;
 }
 
-#status.x-turn   { color: #50a0ff; }
-#status.o-turn   { color: #ff5a78; }
-#status.x-win    { color: #50a0ff; text-shadow: 0 0 16px rgba(80,160,255,0.4); }
-#status.o-win    { color: #ff5a78; text-shadow: 0 0 16px rgba(255,90,120,0.4); }
-#status.draw     { color: #aaa; }
+#status.x-turn {
+  color: #50a0ff;
+}
+
+#status.o-turn {
+  color: #ff5a78;
+}
+
+#status.x-win {
+  color: #50a0ff;
+  text-shadow: 0 0 16px rgba(80, 160, 255, 0.4);
+}
+
+#status.o-win {
+  color: #ff5a78;
+  text-shadow: 0 0 16px rgba(255, 90, 120, 0.4);
+}
+
+#status.draw {
+  color: #aaa;
+}
 
 /* ── New Game Button ──────────────────────────────────────────────── */
 #new-game-btn {
@@ -91,6 +109,91 @@ h1 {
   transform: scale(0.97);
 }
 
+/* ── Difficulty Picker Overlay ────────────────────────────────────── */
+#difficulty-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(10, 10, 16, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: fadeIn 0.25s ease;
+}
+
+#difficulty-picker.hidden {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.picker-card {
+  background: rgba(38, 38, 58, 0.85);
+  border: 1px solid rgba(140, 140, 160, 0.3);
+  border-radius: 16px;
+  padding: 32px 40px 36px;
+  text-align: center;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 80px rgba(80, 160, 255, 0.06);
+}
+
+.picker-card h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: #e0e0f0;
+  letter-spacing: -0.01em;
+}
+
+.picker-buttons {
+  display: flex;
+  gap: 14px;
+}
+
+.picker-buttons button {
+  flex: 1;
+  min-width: 100px;
+  padding: 12px 20px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.picker-buttons button[data-difficulty="normal"] {
+  background: linear-gradient(135deg, #50a0ff, #3080dd);
+  box-shadow: 0 4px 16px rgba(80, 160, 255, 0.3);
+}
+
+.picker-buttons button[data-difficulty="hard"] {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  box-shadow: 0 4px 16px rgba(231, 76, 60, 0.3);
+}
+
+.picker-buttons button:hover {
+  transform: translateY(-2px) scale(1.04);
+  filter: brightness(1.12);
+}
+
+.picker-buttons button:active {
+  transform: scale(0.97);
+}
+
 /* ── Responsive ───────────────────────────────────────────────────── */
 @media (max-width: 740px) {
   #board-canvas {
@@ -100,5 +203,19 @@ h1 {
 
   h1 {
     font-size: 1.3rem;
+  }
+
+  .picker-card {
+    padding: 24px 20px 28px;
+  }
+
+  .picker-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .picker-buttons button {
+    min-width: unset;
+    width: 100%;
   }
 }
