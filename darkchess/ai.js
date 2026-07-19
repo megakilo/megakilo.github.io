@@ -78,6 +78,7 @@
     if (move.type === 'capture') s.quietPlies = 0; else s.quietPlies++;
     s.board[move.to] = s.board[move.from];
     s.board[move.from] = null;
+    B.updateChase(s, move);
     s.turn = 1 - s.turn;
     return s;
   }
@@ -86,6 +87,7 @@
     const s = B.cloneState(state);
     s.board[index] = { rank, color, faceUp: true };
     s.quietPlies = 0;
+    B.updateChase(s, { type: 'flip', index });
     s.turn = 1 - s.turn;
     return s;
   }

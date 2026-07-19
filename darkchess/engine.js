@@ -25,6 +25,12 @@
   const COLOR_NAMES = { r: 'Red', b: 'Black' };
   const DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
   const QUIET_PLY_LIMIT = 40;
+  // Anti-perpetual-chase: after this many consecutive attacking (threat-
+  // creating) moves with the same piece, that piece must rest — its plain
+  // moves are illegal until the player does something else. Captures and
+  // flips are always allowed, and the rule is waived if it would leave the
+  // player with no legal move at all.
+  const CHASE_LIMIT = 3;
 
   function otherColor(c) { return c === 'r' ? 'b' : 'r'; }
 
@@ -45,6 +51,9 @@
       colors: [null, null],   // color per player, set by the first flip
       captured: { r: [], b: [] }, // ranks of captured pieces, by piece color
       quietPlies: 0,
+      // Per player: cell of the piece making consecutive attacking moves,
+      // and how many it has made in a row.
+      chase: [{ pos: null, count: 0 }, { pos: null, count: 0 }],
       result: null,           // { winner: 0|1|null, reason } once the game ends
     };
   }
@@ -56,6 +65,61 @@
     if (a.rank === RANK.GENERAL && d.rank === RANK.SOLDIER) return false;
     if (a.rank === RANK.SOLDIER && d.rank === RANK.GENERAL) return true;
     return a.rank >= d.rank;
+  }
+
+  // Whether the face-up piece at cell i threatens any enemy face-up piece
+  // (an adjacent capture per the hierarchy, or a cannon screen jump).
+  function pieceThreatens(board, i) {
+    const p = board[i];
+    if (!p || !p.faceUp) return false;
+    const r = (i / COLS) | 0, c = i % COLS;
+    if (p.rank === RANK.CANNON) {
+      for (const [dr, dc] of DIRS) {
+        let rr = r + dr, cc = c + dc, screened = false;
+        while (rr >= 0 && rr < ROWS && cc >= 0 && cc < COLS) {
+          const q = board[rr * COLS + cc];
+          if (q) {
+            if (!screened) screened = true;
+            else {
+              if (q.faceUp && q.color !== p.color) return true;
+              break;
+            }
+          }
+          rr += dr; cc += dc;
+        }
+      }
+      return false;
+    }
+    for (const [dr, dc] of DIRS) {
+      const rr = r + dr, cc = c + dc;
+      if (rr < 0 || rr >= ROWS || cc < 0 || cc >= COLS) continue;
+      const q = board[rr * COLS + cc];
+      if (q && q.faceUp && q.color !== p.color && canCapture(p, q)) return true;
+    }
+    return false;
+  }
+
+  // Update the mover's chase tracker. Call after the board is updated but
+  // before the turn switches.
+  function updateChase(state, move) {
+    if (!state.chase) return;
+    const ch = state.chase[state.turn];
+    if (move.type === 'move' && pieceThreatens(state.board, move.to)) {
+      ch.count = ch.pos === move.from ? ch.count + 1 : 1;
+      ch.pos = move.to;
+    } else {
+      ch.pos = null;
+      ch.count = 0;
+    }
+  }
+
+  // Whether the piece at cell i is barred from plain moves this turn by the
+  // anti-chase rule (captures remain legal).
+  function isChaseBlocked(state, i) {
+    if (!state.chase) return false;
+    const ch = state.chase[state.turn];
+    if (ch.pos !== i || ch.count < CHASE_LIMIT) return false;
+    return getLegalMoves(state).some(m => !(m.type === 'move' && m.from === i));
   }
 
   function getLegalMoves(state) {
@@ -97,6 +161,13 @@
         }
       }
     }
+    if (state.chase) {
+      const ch = state.chase[state.turn];
+      if (ch.pos !== null && ch.count >= CHASE_LIMIT) {
+        const filtered = moves.filter(m => !(m.type === 'move' && m.from === ch.pos));
+        if (filtered.length) return filtered;
+      }
+    }
     return moves;
   }
 
@@ -122,6 +193,7 @@
       b[move.to] = p;
       b[move.from] = null;
     }
+    updateChase(state, move);
     state.turn = 1 - state.turn;
     if (getLegalMoves(state).length === 0) {
       state.result = { winner: 1 - state.turn, reason: 'no legal moves' };
@@ -138,14 +210,16 @@
       colors: state.colors.slice(),
       captured: { r: state.captured.r.slice(), b: state.captured.b.slice() },
       quietPlies: state.quietPlies,
+      chase: state.chase.map(c => ({ pos: c.pos, count: c.count })),
       result: state.result,
     };
   }
 
   const Banqi = {
     ROWS, COLS, CELLS, RANK, RANK_COUNTS, RANK_NAMES, PIECE_CHARS, COLOR_NAMES,
-    DIRS, QUIET_PLY_LIMIT,
+    DIRS, QUIET_PLY_LIMIT, CHASE_LIMIT,
     createGame, getLegalMoves, applyMove, canCapture, cloneState, otherColor,
+    pieceThreatens, updateChase, isChaseBlocked,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = Banqi;
   global.Banqi = Banqi;

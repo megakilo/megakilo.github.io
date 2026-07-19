@@ -95,7 +95,10 @@
         el.classList.add('clickable');
       }
     }
-    statusEl.textContent = statusText();
+    statusEl.textContent =
+      selected !== null && B.isChaseBlocked(state, selected)
+        ? `Anti-chase rule: this piece attacked ${B.CHASE_LIMIT} times in a row — play a different piece (capturing with it is still allowed)`
+        : statusText();
     fillTray(trayTop, 'b');
     fillTray(trayBottom, 'r');
   }
