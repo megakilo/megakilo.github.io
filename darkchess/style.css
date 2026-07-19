@@ -86,7 +86,8 @@ h1 {
 }
 
 #board {
-  --sq: min(11.2vw, 74px);
+  /* 8 squares + 7 gaps (28px) + padding (20px) + border (6px) must fit the viewport */
+  --sq: min(calc((100vw - 78px) / 8), 74px);
   display: grid;
   grid-template-columns: repeat(8, var(--sq));
   grid-auto-rows: var(--sq);
