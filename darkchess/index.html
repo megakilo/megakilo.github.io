@@ -25,6 +25,7 @@
 
     <div class="controls">
       <button id="new-game-btn">New Game</button>
+      <button id="mode-btn">Change Mode</button>
     </div>
 
     <details class="rules">
@@ -44,7 +45,20 @@
     </details>
   </main>
 
+  <!-- Game mode picker overlay -->
+  <div id="mode-picker">
+    <div class="picker-card">
+      <h2>Choose Game Mode</h2>
+      <div class="picker-buttons">
+        <button data-mode="pvp">Two Players</button>
+        <button data-mode="ai-normal">vs Computer — Normal</button>
+        <button data-mode="ai-hard">vs Computer — Hard</button>
+      </div>
+    </div>
+  </div>
+
   <script src="engine.js"></script>
+  <script src="ai.js"></script>
   <script src="script.js"></script>
 </body>
 

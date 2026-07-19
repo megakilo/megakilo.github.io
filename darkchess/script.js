@@ -7,8 +7,17 @@
   const trayTop = document.getElementById('tray-top');
   const trayBottom = document.getElementById('tray-bottom');
   const newGameBtn = document.getElementById('new-game-btn');
+  const modeBtn = document.getElementById('mode-btn');
+  const modePicker = document.getElementById('mode-picker');
+
+  const AI_PLAYER = 1; // the human always moves first
+  const AI_DELAY_MS = 400;
 
   let state = null;
+  let mode = 'pvp';      // 'pvp' | 'ai'
+  let aiDepth = 2;
+  let aiThinking = false;
+  let aiTimer = null;
   let selected = null;   // index of the selected face-up piece
   let legalMoves = [];
   let lastMove = null;
@@ -22,7 +31,10 @@
     cells.push(div);
   }
 
-  function playerName(idx) { return `Player ${idx + 1}`; }
+  function playerName(idx) {
+    if (mode === 'ai') return idx === AI_PLAYER ? 'Computer' : 'You';
+    return `Player ${idx + 1}`;
+  }
 
   function colorLabel(idx) {
     const c = state.colors[idx];
@@ -33,8 +45,10 @@
     if (state.result) {
       if (state.result.winner === null) return `Draw — ${state.result.reason}.`;
       const w = state.result.winner;
-      return `${playerName(w)}${colorLabel(w)} wins — opponent has ${state.result.reason}!`;
+      const verb = playerName(w) === 'You' ? 'win' : 'wins';
+      return `${playerName(w)}${colorLabel(w)} ${verb} — opponent has ${state.result.reason}!`;
     }
+    if (mode === 'ai' && state.turn === AI_PLAYER) return 'Computer is thinking…';
     if (state.colors[0] === null) {
       return `${playerName(state.turn)}: flip any piece — its color becomes yours`;
     }
@@ -48,6 +62,7 @@
         if (m.type !== 'flip' && m.from === selected) movesByTarget.set(m.to, m);
       }
     }
+    const humansTurn = !(mode === 'ai' && state.turn === AI_PLAYER);
     const myColor = state.colors[state.turn];
     for (let i = 0; i < B.CELLS; i++) {
       const el = cells[i];
@@ -72,9 +87,8 @@
       if (i === selected) el.classList.add('sel');
       const tm = movesByTarget.get(i);
       if (tm) el.classList.add(tm.type === 'capture' ? 'capture-target' : 'target');
-      if (!state.result && p && (!p.faceUp || tm || (p.faceUp && p.color === myColor))) {
-        el.classList.add('clickable');
-      } else if (tm) {
+      if (!state.result && humansTurn
+        && (tm || (p && (!p.faceUp || p.color === myColor)))) {
         el.classList.add('clickable');
       }
     }
@@ -100,7 +114,8 @@
   }
 
   function onCellClick(i) {
-    if (!state || state.result) return;
+    if (!state || state.result || aiThinking) return;
+    if (mode === 'ai' && state.turn === AI_PLAYER) return;
     const p = state.board[i];
     if (p && !p.faceUp) { doMove({ type: 'flip', index: i }); return; }
     if (selected !== null) {
@@ -118,9 +133,24 @@
     selected = null;
     legalMoves = B.getLegalMoves(state);
     render();
+    maybeAITurn();
+  }
+
+  function maybeAITurn() {
+    if (mode !== 'ai' || state.result || state.turn !== AI_PLAYER) return;
+    aiThinking = true;
+    const s = state;
+    aiTimer = setTimeout(() => {
+      if (state !== s) return; // a new game was started meanwhile
+      const m = BanqiAI.chooseMove(state, { depth: aiDepth });
+      aiThinking = false;
+      if (m) doMove(m);
+    }, AI_DELAY_MS);
   }
 
   function newGame() {
+    clearTimeout(aiTimer);
+    aiThinking = false;
     state = B.createGame();
     selected = null;
     lastMove = null;
@@ -129,5 +159,16 @@
   }
 
   newGameBtn.addEventListener('click', newGame);
+  modeBtn.addEventListener('click', () => modePicker.classList.remove('hidden'));
+  for (const btn of modePicker.querySelectorAll('button[data-mode]')) {
+    btn.addEventListener('click', () => {
+      const m = btn.dataset.mode;
+      mode = m === 'pvp' ? 'pvp' : 'ai';
+      aiDepth = m === 'ai-hard' ? 5 : 2;
+      modePicker.classList.add('hidden');
+      newGame();
+    });
+  }
+
   newGame();
 })();
