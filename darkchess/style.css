@@ -86,10 +86,10 @@ h1 {
 }
 
 #board {
-  /* 8 squares + 7 gaps (28px) + padding (20px) + border (6px) must fit the viewport */
-  --sq: min(calc((100vw - 78px) / 8), 74px);
+  /* 4 squares + 3 gaps (12px) + padding (20px) + border (6px) must fit the viewport */
+  --sq: min(calc((100vw - 54px) / 4), 74px);
   display: grid;
-  grid-template-columns: repeat(8, var(--sq));
+  grid-template-columns: repeat(4, var(--sq));
   grid-auto-rows: var(--sq);
   gap: 4px;
   padding: 10px;
@@ -167,7 +167,7 @@ h1 {
 .tray {
   min-height: 30px;
   width: 100%;
-  max-width: calc(8 * min(11.2vw, 74px) + 48px);
+  max-width: calc(4 * min(calc((100vw - 54px) / 4), 74px) + 38px);
   display: flex;
   flex-wrap: wrap;
   align-items: center;

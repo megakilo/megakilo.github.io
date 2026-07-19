@@ -22,13 +22,16 @@
   let legalMoves = [];
   let lastMove = null;
 
+  // The engine board is 4 rows x 8 cols; display it vertically (8 rows x 4
+  // cols) by transposing: display cell d -> engine cell i.
   const cells = [];
-  for (let i = 0; i < B.CELLS; i++) {
+  for (let d = 0; d < B.CELLS; d++) {
+    const i = (d % B.ROWS) * B.COLS + ((d / B.ROWS) | 0);
     const div = document.createElement('div');
     div.className = 'cell';
     div.addEventListener('click', () => onCellClick(i));
     boardEl.appendChild(div);
-    cells.push(div);
+    cells[i] = div;
   }
 
   function playerName(idx) {
