@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Play Banqi (Chinese Dark Chess) in the browser. Flip, move, and capture face-down pieces on half a xiangqi board.">
+  <title>Dark Chess (Banqi)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <main id="app">
+    <h1>Dark Chess <span class="subtitle">暗棋 · Banqi</span></h1>
+
+    <div id="status">Player 1: flip any piece to start</div>
+
+    <div class="tray" id="tray-top"></div>
+    <div id="board" aria-label="Banqi board"></div>
+    <div class="tray" id="tray-bottom"></div>
+
+    <div class="controls">
+      <button id="new-game-btn">New Game</button>
+    </div>
+
+    <details class="rules">
+      <summary>How to play</summary>
+      <ul>
+        <li>All 32 pieces start shuffled face down. On your turn: <strong>flip</strong> a face-down piece,
+          <strong>move</strong> one of your face-up pieces one square up/down/left/right, or
+          <strong>capture</strong> an adjacent enemy face-up piece.</li>
+        <li>The color of the first piece flipped belongs to the player who flipped it.</li>
+        <li>Capture ranking: General 帥/將 &gt; Advisor 仕/士 &gt; Elephant 相/象 &gt; Chariot 俥/車 &gt;
+          Horse 傌/馬 &gt; Cannon 炮/砲 &gt; Soldier 兵/卒. A piece captures equal or lower rank —
+          except the General cannot capture Soldiers, and Soldiers can capture the General.</li>
+        <li>Cannons capture differently: they jump over exactly one piece (any piece) along a row or column
+          and can take <em>any</em> enemy face-up piece behind it. They cannot capture adjacent pieces.</li>
+        <li>If you have no legal move, you lose. 40 consecutive moves with no flip or capture is a draw.</li>
+      </ul>
+    </details>
+  </main>
+
+  <script src="engine.js"></script>
+  <script src="script.js"></script>
+</body>
+
+</html>
