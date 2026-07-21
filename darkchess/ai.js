@@ -14,6 +14,12 @@
   const WIN = 10000;
   const HIDDEN_DISCOUNT = 0.9;
   const MOBILITY_WEIGHT = 0.04;
+  // Max plies a quiescence search chases a capture sequence past the horizon.
+  const QDEPTH = 6;
+  // How much a material/positional edge is discounted as the game approaches
+  // the 40-quiet-ply draw (0 = ignore the clock, 1 = edge fully gone at the
+  // limit). Nudges the leading side to convert instead of shuffling.
+  const DRAW_DECAY = 0.5;
 
   function computePool(state) {
     const pool = { r: B.RANK_COUNTS.slice(), b: B.RANK_COUNTS.slice() };
@@ -70,7 +76,13 @@
       score += (pool[myColor][rank] - pool[oppColor][rank]) * VALUES[rank] * HIDDEN_DISCOUNT;
     }
     score += MOBILITY_WEIGHT * (countMoves(state, myColor) - countMoves(state, oppColor));
-    return score;
+    // Draw-management gradient: as quiet plies pile up toward the draw limit,
+    // shrink the advantage toward 0. The side that is ahead thus prefers a
+    // line that resets the clock (a capture or flip) over shuffling into the
+    // 40-ply draw, while the side behind is content to let it run down. This
+    // pushes the engine to actually convert winning positions.
+    const drawPressure = 1 - DRAW_DECAY * (state.quietPlies / B.QUIET_PLY_LIMIT);
+    return score * drawPressure;
   }
 
   function appliedMove(state, move) {
@@ -128,13 +140,51 @@
     return ev;
   }
 
+  // Quiescence search: at the search horizon, keep resolving forcing capture
+  // sequences (with a stand-pat option) so a position is never scored in the
+  // middle of an exchange — otherwise a leaf reached right after a capture is
+  // scored as if the recapture never happens (the horizon effect, acute in a
+  // capture-dominated game). Flips are chance nodes and are excluded; only
+  // captures extend the horizon. The pool is invariant across captures (a
+  // capture never reveals a face-down piece), so it is threaded unchanged.
+  function qsearch(state, pool, alpha, beta, me, qd) {
+    const stand = evaluate(state, pool, me);
+    const maximizing = state.turn === me;
+    if (maximizing) {
+      if (stand >= beta) return stand;
+      if (stand > alpha) alpha = stand;
+    } else {
+      if (stand <= alpha) return stand;
+      if (stand < beta) beta = stand;
+    }
+    if (qd <= 0) return stand;
+    const caps = B.getLegalMoves(state).filter(m => m.type === 'capture');
+    if (caps.length === 0) return stand;
+    let best = stand;
+    for (const m of orderMoves(state, caps)) {
+      const v = qsearch(appliedMove(state, m), pool, alpha, beta, me, qd - 1);
+      if (maximizing) {
+        if (v > best) best = v;
+        if (best > alpha) alpha = best;
+      } else {
+        if (v < best) best = v;
+        if (best < beta) beta = best;
+      }
+      if (alpha >= beta) break;
+    }
+    return best;
+  }
+
   function search(state, pool, depth, alpha, beta, me) {
-    if (state.quietPlies >= B.QUIET_PLY_LIMIT) return 0;
+    // Terminal checks in the same order as engine.applyMove: a side with no
+    // legal move has lost; only then is a quiet-ply exhaustion a draw. (Doing
+    // the draw test first would score a lost position as a draw.)
     const moves = B.getLegalMoves(state);
     if (moves.length === 0) {
       return state.turn === me ? -(WIN + depth) : WIN + depth;
     }
-    if (depth <= 0) return evaluate(state, pool, me);
+    if (state.quietPlies >= B.QUIET_PLY_LIMIT) return 0;
+    if (depth <= 0) return qsearch(state, pool, alpha, beta, me, QDEPTH);
     const maximizing = state.turn === me;
     let best = maximizing ? -Infinity : Infinity;
     for (const m of orderMoves(state, moves)) {
@@ -164,13 +214,15 @@
     const me = state.turn;
     const pool = computePool(state);
     let bestMoves = [], bestVal = -Infinity;
-    let alpha = -Infinity;
+    // Search every root move with a full window. Raising alpha as we go would
+    // let an inferior move's alpha-clipped fail-low bound land within epsilon
+    // of the best score and pollute the random tie-break set; the root has few
+    // moves, so exact values are cheap and worth more than the pruning.
     for (const m of orderMoves(state, moves)) {
-      const v = moveValue(state, m, pool, depth - 1, alpha, Infinity, me);
+      const v = moveValue(state, m, pool, depth - 1, -Infinity, Infinity, me);
       if (v > bestVal + 1e-9) {
         bestVal = v;
         bestMoves = [m];
-        if (v > alpha) alpha = v;
       } else if (v > bestVal - 1e-9) {
         bestMoves.push(m);
       }
