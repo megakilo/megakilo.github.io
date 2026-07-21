@@ -16,10 +16,6 @@
   const MOBILITY_WEIGHT = 0.04;
   // Max plies a quiescence search chases a capture sequence past the horizon.
   const QDEPTH = 6;
-  // How much a material/positional edge is discounted as the game approaches
-  // the 40-quiet-ply draw (0 = ignore the clock, 1 = edge fully gone at the
-  // limit). Nudges the leading side to convert instead of shuffling.
-  const DRAW_DECAY = 0.5;
 
   function computePool(state) {
     const pool = { r: B.RANK_COUNTS.slice(), b: B.RANK_COUNTS.slice() };
@@ -76,13 +72,7 @@
       score += (pool[myColor][rank] - pool[oppColor][rank]) * VALUES[rank] * HIDDEN_DISCOUNT;
     }
     score += MOBILITY_WEIGHT * (countMoves(state, myColor) - countMoves(state, oppColor));
-    // Draw-management gradient: as quiet plies pile up toward the draw limit,
-    // shrink the advantage toward 0. The side that is ahead thus prefers a
-    // line that resets the clock (a capture or flip) over shuffling into the
-    // 40-ply draw, while the side behind is content to let it run down. This
-    // pushes the engine to actually convert winning positions.
-    const drawPressure = 1 - DRAW_DECAY * (state.quietPlies / B.QUIET_PLY_LIMIT);
-    return score * drawPressure;
+    return score;
   }
 
   function appliedMove(state, move) {
